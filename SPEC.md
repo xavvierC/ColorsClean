@@ -609,6 +609,32 @@ Asset optimization is a known performance opportunity.
 
 ## 17. Motion and interaction
 
+### 17.1 Phase 2 pre-cleanup animation audit — 2026-09-24
+
+Production animation/event ownership before cleanup:
+
+| System | Targets / state | Behavior | Conflict status |
+| --- | --- | --- | --- |
+| IntersectionObserver A | `section,.strip,.service,.feature,.step,.result-visual,footer>div` | Adds `reveal`, then one-time `is-visible`; root margin `0 0 -10% 0`, threshold `0.08` | Conflicts with Observer B on every main section and `.strip` |
+| IntersectionObserver B | `main>section,.strip,footer` | Adds `reveal` and toggles `is-visible` on enter/exit; root margin `-10% 0 -10% 0`, threshold `0.06` | Overlaps Observer A on sections/strip and can hide/replay them after A has permanently revealed them |
+| Trust cleanup script | `.trust span` | Removes `reveal`, forces `is-visible` | No current production target; the static production Hero has no `.trust` block |
+| Hero pointer interaction | `.hero` | Updates `--mouse-x` / `--mouse-y` on pointer movement via `requestAnimationFrame` | Unique owner |
+| Header scroll listener | `header.scrolled` | Toggles header compact state above 24px scroll | Unique state |
+| Back-to-top scroll listener | `.back-top.visible` | Toggles visibility above 700px scroll | Unique state; separate from header state |
+| Mobile breakpoint listener | mobile menu | Closes the menu when returning above 850px | Navigation-only, not an animation owner |
+| CSS Hero entrance | `.hero`, `.hero-copy`, `.hero:after` | Keyframe entrance animation | Hero is also targeted by both reveal observers, creating compounded initial opacity/transform behavior |
+
+No JavaScript `resize` listeners exist.
+
+Primary defects identified before editing:
+
+- two observers control `is-visible` on the same sections and strip;
+- Observer B can remove `is-visible` after Observer A has already treated the same element as permanently revealed;
+- sections can replay on scroll because Observer B continuously toggles visibility;
+- the Hero has both its own CSS entrance animation and observer-based reveal ownership;
+- the obsolete `.trust span` script performs no production work;
+- reveal classes are applied before observer setup is proven healthy, so an observer/setup failure can theoretically leave content hidden.
+
 Motion must remain subtle and functional.
 
 Allowed:
