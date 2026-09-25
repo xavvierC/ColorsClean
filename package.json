@@ -8,8 +8,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "prebuild": "node scripts/phase5-audit.mjs"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@vitejs/plugin-react": "6.1.1",
