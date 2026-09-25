@@ -1,18 +1,22 @@
 {
+  "type": "module",
+  "private": true,
+  "packageManager": "npm@11.19.0",
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "vite",
-    "prebuild": "node -e \"console.log('phase3-node',process.version)\" && npm --version && npm ls --depth=0",
     "build": "vite build",
-    "postbuild": "cp package-lock.json dist/_phase3-package-lock.json",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "latest",
-    "vite": "latest",
-    "typescript": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "lucide-react": "latest"
+    "@vitejs/plugin-react": "6.1.1",
+    "vite": "8.3.0",
+    "typescript": "7.0.2",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "lucide-react": "1.46.0"
   },
   "devDependencies": {}
 }
