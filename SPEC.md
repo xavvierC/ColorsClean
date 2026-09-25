@@ -635,6 +635,85 @@ Primary defects identified before editing:
 - the obsolete `.trust span` script performs no production work;
 - reveal classes are applied before observer setup is proven healthy, so an observer/setup failure can theoretically leave content hidden.
 
+### 17.2 Final Phase 2 animation architecture
+
+Phase 2 stabilization completed in commit `f5b803ff04ebae5c4c2734703d34a3be2b115cf1`.
+
+#### Reveal owner: `setupOneShotReveal`
+
+The production page now has one reusable IntersectionObserver helper with two intentionally separate reveal families.
+
+**Section reveal family**
+
+Targets:
+
+- `main > section`, excluding `.hero`;
+- `.strip`;
+- `footer`.
+
+Behavior:
+
+- one-time reveal only;
+- root margin: `-10% 0px -10% 0px`;
+- threshold: `0.06`;
+- existing section delay cadence is preserved;
+- elements are unobserved after the first successful reveal, so minor reverse scrolling does not hide/replay them.
+
+**Detail reveal family**
+
+Targets:
+
+- `.service`;
+- `.feature`;
+- `.step`;
+- `.result-visual`;
+- `footer > div`.
+
+Behavior:
+
+- one-time reveal only;
+- root margin: `0px 0px -10% 0px`;
+- threshold: `0.08`;
+- legacy per-element delay cadence is preserved.
+
+The two families use the same helper but retain different thresholds, root margins, targets and timing.
+
+#### Hero animation owner
+
+The Hero is no longer controlled by an IntersectionObserver.
+
+Its entrance remains owned by the existing CSS Hero keyframes, while the pointer-driven light effect remains owned by the unique `pointermove` handler using `requestAnimationFrame`.
+
+This removes compounded observer + CSS opacity/transform control from the above-the-fold Hero.
+
+#### Reduced-motion and fail-open behavior
+
+When `prefers-reduced-motion: reduce` is enabled:
+
+- reveal classes are not added by JavaScript;
+- page content remains visible;
+- pointer-driven Hero motion is not bound;
+- existing reduced-motion CSS continues to suppress Hero and interaction animations.
+
+If `IntersectionObserver` is unavailable, reveal classes are not added.
+
+If observer setup throws, the helper disconnects the observer and removes reveal state and inline delays from its targets. The page therefore remains readable instead of leaving content at `opacity: 0`.
+
+#### Other event owners intentionally kept separate
+
+- Header scroll listener → owns only `header.scrolled` at the 24px threshold.
+- Back-to-top scroll listener → owns only `.back-top.visible` at the 700px threshold.
+- Mobile breakpoint listener → navigation state only; not part of the reveal animation system.
+
+These listeners calculate different states and were not merged solely to reduce listener count.
+
+#### Animation-related technical debt intentionally left for later
+
+- `src/styles.css` still contains layered historical Hero/keyframe declarations and animation overrides. Consolidating those rules belongs to the conservative CSS maintenance phase because changing cascade order can alter the current visuals.
+- Header scroll compaction changes header height as an existing interaction. It was not redesigned during animation cleanup.
+- CTA busy-state text replacement remains existing interaction behavior and was not changed in this phase.
+- No animation library was added.
+
 Motion must remain subtle and functional.
 
 Allowed:
