@@ -378,9 +378,13 @@ Interactive controls on touch layouts should generally provide at least a 44px e
 
 A functional mobile navigation is required.
 
-The current production HTML hides desktop navigation below the responsive breakpoint but does not provide the menu button that exists in the unused React implementation.
+Current production behavior after the Phase 1 stabilization pass:
 
-This is a known issue and must be corrected in a future approved interface maintenance pass.
+- desktop navigation remains unchanged above 850px;
+- below 850px, the static production header exposes an accessible hamburger control;
+- the control uses `aria-controls`, `aria-expanded` and a dynamic Portuguese accessible label;
+- the menu closes after navigation, on `Escape`, when clicking outside the header, and when returning to the desktop breakpoint;
+- the implementation remains native HTML/CSS/JavaScript and does not depend on React.
 
 ---
 
@@ -734,6 +738,7 @@ When applicable:
 ### Production-active
 
 - Static header in `index.html`
+- Accessible static mobile navigation controller in `index.html`
 - Static Hero in `index.html`
 - Static sections in `index.html`
 - FAQ via `details/summary`
@@ -780,23 +785,19 @@ Do not perform this migration without approval.
 
 ### P1 / High
 
-#### 22.2 Mobile navigation is incomplete in production
+#### 22.2 Phase 1 production stabilization — resolved 2026-09-24
 
-CSS hides `nav` below 850px, but the static `index.html` does not contain the menu button used by the React implementation.
+Resolved in commit `00651f5b82c7bed4366020f04b56268bb4a858c2`:
 
-Result: the main navigation is effectively unavailable on smaller screens.
+- added the missing accessible mobile navigation control;
+- preserved the desktop navigation;
+- moved all inline scripts inside the valid HTML document structure;
+- removed the stray `+` artifact;
+- rewrote the affected first inline script so it parses correctly;
+- validated all inline script syntax and internal navigation fragments before committing;
+- production deployment completed successfully on Vercel.
 
-#### 22.3 Invalid / fragile document structure
-
-Multiple `<script>` blocks are placed after the closing `</body></html>` tags in `index.html`.
-
-Browsers may recover, but this is invalid document structure and should eventually be corrected.
-
-#### 22.4 JavaScript syntax artifact
-
-The first inline script currently contains a stray `+` immediately before its closing `</script>`.
-
-This is a likely syntax error and can prevent that script block from executing correctly.
+These items are no longer active defects.
 
 #### 22.5 Repeated reveal/animation logic
 
