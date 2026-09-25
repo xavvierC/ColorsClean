@@ -95,7 +95,27 @@ Current deployed runtime behavior:
 - no application router;
 - no server-side rendering.
 
-### 3.1 Current scripts
+### 3.1 Package manager, runtime and scripts
+
+Canonical package manager:
+
+- npm `11.19.0`
+- `package-lock.json` lockfile version 3
+- install command: `npm ci`
+
+Runtime policy:
+
+- Node.js `24.x`
+- Vercel currently runs Node `24.x`
+- the successful Phase 3 diagnostic build reported Node `v24.21.0`
+
+Module policy:
+
+- `package.json` declares `"type": "module"`;
+- `vite.config.ts` uses native ESM syntax;
+- repository code search found no CommonJS `require`, `module.exports` or `exports.*` usage before enabling ESM.
+
+Current scripts:
 
 ```json
 {
@@ -105,7 +125,9 @@ Current deployed runtime behavior:
 }
 ```
 
-There is currently no dedicated:
+A `typecheck` script was intentionally not added during Phase 3 because the disconnected React/TypeScript implementation does not currently include the React type packages needed for a clean typecheck, and this phase explicitly avoided adding dependencies.
+
+There is still no dedicated:
 
 - lint script;
 - typecheck script;
@@ -154,23 +176,39 @@ For permanent approved changes:
 8. for interface changes, verify the deployed page when possible;
 9. update this `SPEC.md` whenever an important permanent design, architecture, content or workflow decision is made.
 
-### 4.3 Build expectations
+### 4.3 Build and install expectations
 
-Vercel currently runs:
+The repository now defines a deterministic npm workflow.
+
+Vercel install command:
+
+```bash
+npm ci
+```
+
+Build command:
 
 ```bash
 npm run build
 ```
 
-and Vite outputs the production build to:
+Vite output directory:
 
 ```text
 dist/
 ```
 
-The existing README deployment instructions are outdated because they describe the project as a generic static deployment with no build command and output directory `.`.
+Framework preset:
 
-Do not rely on those README deployment instructions until they are corrected.
+`vite`
+
+Root directory:
+
+repository root.
+
+The repository-side `vercel.json` explicitly sets `installCommand` to `npm ci`; the Vercel project continues using the Vite framework preset and Node `24.x`.
+
+The README was corrected during Phase 3 to match this real deployment flow.
 
 ---
 
@@ -926,34 +964,28 @@ The current visual result should be preserved, but future maintenance should pro
 
 ### P2 / Medium
 
-#### 22.7 Non-deterministic dependency versions
+#### 22.7 Phase 3 build reproducibility — resolved 2026-09-24
 
-`package.json` uses `"latest"` for all dependencies and there is no lockfile in the repository.
+Resolved in commit `0269c61268cf8f4b5854848c2c2881470808f67a`:
 
-Build results may change over time without source changes.
+- replaced every top-level `"latest"` dependency specifier with the exact version that was resolving successfully in the existing Vercel environment;
+- committed `package-lock.json` (lockfile version 3);
+- established npm as the canonical package manager;
+- established `npm ci` as the deterministic install command;
+- declared `"type": "module"`, removing the known Vite ESM/CommonJS warning;
+- established Node `24.x` as the repository runtime policy to match Vercel;
+- updated the deployment documentation.
 
-A future maintenance task should pin versions and commit a lockfile.
+Pinned top-level versions:
 
-#### 22.8 Vite ESM configuration warning
+- `@vitejs/plugin-react@6.1.1`
+- `vite@8.3.0`
+- `typescript@7.0.2`
+- `react@19.3.0`
+- `react-dom@19.3.0`
+- `lucide-react@1.46.0`
 
-Production build logs report that `vite.config.ts` uses ESM syntax while the package is loaded as CommonJS.
-
-Potential correction:
-
-- declare `"type": "module"` in `package.json`; or
-- use an explicitly compatible config extension/setup.
-
-Do not change this blindly; validate the build after any adjustment.
-
-#### 22.9 README deployment instructions are outdated
-
-README says:
-
-- Framework: Other / Static
-- no build command
-- output directory `.`
-
-Actual Vercel project is Vite and runs `npm run build` to create `dist`.
+The final Vercel validation used `npm ci`, found zero reported npm vulnerabilities, built successfully with Vite `8.3.0`, and no longer emitted the previous ESM warning.
 
 #### 22.10 Heavy image assets
 
@@ -1042,9 +1074,8 @@ The following decisions are intentionally open:
 7. Decide whether the current FAQ content is final.
 8. Decide whether SEO metadata and structured data should be implemented.
 9. Decide whether a custom production domain will replace the Vercel alias.
-10. Add lint/typecheck/tests and define the minimum quality gate.
-11. Pin dependency versions and add a lockfile.
-12. Correct README deployment documentation.
+10. Add lint/typecheck/tests and define the minimum quality gate. A typecheck currently requires a separate decision about the disconnected React source and its missing React type packages.
+11. Decide whether inactive React dependencies should remain installed while the static architecture stays authoritative.
 
 ---
 
