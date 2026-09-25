@@ -1186,3 +1186,86 @@ Hero and responsive cascade history is preserved when visual equivalence cannot 
 
 ---
 
+
+### 26.3 Phase 4 safe cleanup result
+
+Phase 4 cleanup was intentionally conservative because browser screenshots and DevTools are not available in this environment.
+
+Code commits:
+
+- `5f30d437004bb8befe564876e4257134616fd4b8` — removed only declarations proven shadowed by later declarations with the same selector/media ownership;
+- `a24582deb526988ebac7b416f577cf532ca1f348` — removed the obsolete CTA arrow pseudo-element cascade after proving the final production state intentionally rendered text-only CTAs.
+
+Baseline → final stylesheet metrics:
+
+- characters: 28,986 → 27,431 (−1,555);
+- physical lines: 54 → 54 (the stylesheet is intentionally compact/minified in places, so safe cleanup reduced declarations rather than newline count);
+- parsed rules: 327 → 309 (−18);
+- parsed declarations: 853 → 797 (−56);
+- repeated selector groups: 42 → 35 (−7);
+- `!important` occurrences: 53 → 46 (−7).
+
+No Hero cascade block, Hero keyframe family or responsive Hero positioning rule was consolidated.
+
+### 26.4 Breakpoint and cascade ownership
+
+The current production breakpoint strategy remains unchanged:
+
+- base/desktop rules;
+- `@media (max-width: 850px)` for tablet/mobile structural adaptation and navigation;
+- `@media (max-width: 500px)` for narrow mobile refinements;
+- `@media (prefers-reduced-motion: reduce)` for motion suppression.
+
+Phase 4 deliberately did not merge repeated media-query blocks. Source order remains part of the current cascade contract.
+
+Current ownership expectations:
+
+- Header base layout is defined early; the later header refinement block owns final height/background/backdrop values.
+- Phase 1 mobile navigation block owns the final mobile menu visual/state overrides.
+- Phase 2 JavaScript owns reveal-class lifecycle; CSS owns reveal presentation.
+- Service/feature interaction styling is distributed across base structural rules and later interaction refinement rules.
+- Hero final appearance is owned by the late Hero cleanup/refinement blocks and depends on source order plus selected `!important` declarations.
+
+### 26.5 Important cascade dependencies intentionally preserved
+
+The remaining `!important` declarations are not considered globally approved style practice; they are preserved because removing them cannot be proven visually safe without a browser-computed-style comparison.
+
+The most sensitive remaining groups are:
+
+- Hero background image, position, overlay geometry and responsive overrides;
+- Hero child animation suppression used by the final scene animation system;
+- Hero reduced-motion fallbacks;
+- scroll-state header/logo sizing;
+- step background/border cleanup and disabled decorative step pseudo-elements;
+- reveal reduced-motion transform reset;
+- dormant React-only logo/trust styling.
+
+Do not remove these merely to reduce the `!important` count.
+
+### 26.6 Known CSS debt intentionally preserved
+
+The following debt remains by design:
+
+- historical Hero declarations and keyframes that appear partially shadowed but participate in a visually sensitive cascade history;
+- repeated `max-width: 850px` and reduced-motion blocks with different ownership/timing;
+- production-dead selectors still referenced by the disconnected React implementation;
+- step-decoration rules that are later disabled with `!important`;
+- dormant interactive-hover-button styles associated with the inactive reusable React component;
+- compact one-line rule formatting, which limits meaningful physical line-count reduction.
+
+Until browser-level visual regression tooling is available, prefer retaining this debt over speculative consolidation.
+
+### 26.7 Phase 4 validation limitation
+
+Structural validation covers:
+
+- valid CSS brace structure;
+- valid inline JavaScript parsing;
+- internal anchor integrity;
+- Phase 1 mobile menu markup;
+- Phase 2 single-observer architecture;
+- Vite production build;
+- Vercel production deployment and HTTP response.
+
+It does not constitute pixel-perfect visual equivalence at 1440px, 768px or 390px because no browser screenshot/DevTools runner is available.
+
