@@ -1,5 +1,5 @@
 import { readFileSync, statSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 
 const assets = ['public/hero-colorsclean.png', 'public/logo.png'];
 
@@ -34,12 +34,47 @@ function tool(name, args = ['--version']) {
   }
 }
 
+function psnr(original, candidate) {
+  const result = spawnSync('compare', ['-metric', 'PSNR', original, candidate, 'null:'], { encoding: 'utf8' });
+  const value = (result.stderr || result.stdout || '').trim();
+  return value || null;
+}
+
+function convert(args) {
+  execFileSync('convert', args, { stdio: 'ignore' });
+}
+
 console.log('PHASE5_ASSET_AUDIT=' + JSON.stringify(assets.map(readPngMeta)));
+
+const formats = execFileSync('convert', ['-list', 'format'], { encoding: 'utf8' });
 console.log('PHASE5_TOOL_AUDIT=' + JSON.stringify({
   cwebp: tool('cwebp'),
   avifenc: tool('avifenc'),
   magick: tool('magick'),
   convert: tool('convert'),
+  compare: tool('compare', ['-version']),
   ffmpeg: tool('ffmpeg', ['-version']),
-  python3: tool('python3', ['--version'])
+  python3: tool('python3', ['--version']),
+  webpDelegate: /WEBP\*/.test(formats) || /^\s*WEBP\s/m.test(formats),
+  avifDelegate: /AVIF\*/.test(formats) || /^\s*AVIF\s/m.test(formats),
+  heicDelegate: /HEIC\*/.test(formats) || /^\s*HEIC\s/m.test(formats)
+}));
+
+const heroOriginal = 'public/hero-colorsclean.png';
+const heroTests = [];
+for (const quality of [92, 90, 88]) {
+  const out = `/tmp/hero-q${quality}.webp`;
+  convert([heroOriginal, '-strip', '-quality', String(quality), '-define', 'webp:method=6', out]);
+  heroTests.push({ quality, bytes: statSync(out).size, psnr: psnr(heroOriginal, out) });
+}
+const hero1440 = '/tmp/hero-1440-q90.webp';
+convert([heroOriginal, '-strip', '-resize', '1440x', '-quality', '90', '-define', 'webp:method=6', hero1440]);
+
+const logoWebp = '/tmp/logo-768.webp';
+convert(['public/logo.png', '-strip', '-resize', '768x256', '-define', 'webp:lossless=true', '-define', 'webp:method=6', logoWebp]);
+
+console.log('PHASE5_CANDIDATE_AUDIT=' + JSON.stringify({
+  heroTests,
+  hero1440: { bytes: statSync(hero1440).size },
+  logo768LosslessWebp: { bytes: statSync(logoWebp).size }
 }));
