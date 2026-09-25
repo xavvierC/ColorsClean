@@ -78,3 +78,17 @@ console.log('PHASE5_CANDIDATE_AUDIT=' + JSON.stringify({
   hero1440: { bytes: statSync(hero1440).size },
   logo768LosslessWebp: { bytes: statSync(logoWebp).size }
 }));
+
+
+const heroFinal = 'public/phase5-hero.webp';
+convert([heroOriginal, '-strip', '-quality', '92', '-define', 'webp:method=6', heroFinal]);
+const logoFinal = 'public/phase5-logo.webp';
+convert(['public/logo.png', '-strip', '-resize', '768x256', '-define', 'webp:lossless=true', '-define', 'webp:method=6', logoFinal]);
+
+import { writeFileSync } from 'node:fs';
+writeFileSync('public/phase5-hero.webp.b64', readFileSync(heroFinal).toString('base64'));
+writeFileSync('public/phase5-logo.webp.b64', readFileSync(logoFinal).toString('base64'));
+console.log('PHASE5_STAGED_ASSETS=' + JSON.stringify({
+  heroBytes: statSync(heroFinal).size,
+  logoBytes: statSync(logoFinal).size
+}));
