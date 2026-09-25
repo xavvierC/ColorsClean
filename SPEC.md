@@ -1092,3 +1092,97 @@ For every meaningful permanent change:
 - update this file if the decision changes the project's long-term design, architecture, content, responsiveness or deployment behavior.
 
 When repository code and this SPEC disagree because of a newer approved change, update the SPEC in the same work cycle so the divergence does not persist.
+
+## 26. Phase 4 CSS maintenance
+
+### 26.1 Phase 4A audit baseline — 2026-09-24
+
+Production stylesheet audited from commit `472eac1ff8a14ea1eb7d7222d6007e8cc3b2dea7`.
+
+Baseline metrics:
+
+- stylesheet: `src/styles.css`
+- physical lines: 54
+- parsed style rules: 327
+- repeated selector groups: 61
+- `!important` occurrences: 53
+- repeated `@media (max-width: 850px)` blocks: 12
+- repeated `@media (max-width: 500px)` blocks: 2
+- repeated `@media (prefers-reduced-motion: reduce)` blocks: 9
+- `@media (hover: none)` blocks: 1
+- keyframes present: `heroIn`, `motionReveal`, `heroImageIn`, `dropPulse`, `heroSceneIn`, `heroCopyIn`, `heroOverlayIn`, `heroSceneInMobile`
+
+#### SAFE
+
+The audit found declarations that are provably shadowed by later declarations with the exact same selector and media context. These are safe candidates because removing the earlier declaration does not change the final cascade result.
+
+Examples outside the Hero include:
+
+- obsolete header height/background/border/backdrop values overridden later by the final header block;
+- obsolete mobile `nav.show` top/background/padding values overridden by the Phase 1 navigation block;
+- earlier focus-ring values overridden by the final CTA focus rule;
+- earlier service hover transform/shadow values overridden by the later service interaction rule while preserving the still-active border color;
+- earlier FAQ paragraph margin overridden by the later closed-state rule;
+- earlier feature background/border/min-height and hover values overridden by the final feature styling;
+- duplicate `.final { position: relative }`;
+- duplicate `.step-grid:before { z-index: 0 }`;
+- repeated mobile logo width/height values identical to the base logo rule.
+
+Any cleanup must remove only the shadowed property/rule and preserve declarations from the earlier block that still contribute to the computed style.
+
+#### RISKY
+
+The following are intentionally protected and must not be consolidated without browser-level visual verification:
+
+- `.hero`: 20 rule occurrences across base and responsive contexts;
+- `.hero:after`: 14 rule occurrences;
+- `.hero-copy`: 7 rule occurrences;
+- Hero animation history including `heroIn`, `heroImageIn`, `motionReveal`, `heroSceneIn`, `heroCopyIn`, `heroOverlayIn` and `heroSceneInMobile`;
+- final Hero background, overlay and animation behavior relies on source order and multiple `!important` declarations;
+- responsive Hero positioning differs intentionally between base and `max-width: 850px`;
+- step decoration history contains disabled pseudo-elements and `!important` cleanup rules; these are visually sensitive enough to keep unless the exact inactive declaration is proven redundant;
+- header scroll-state sizing uses `!important` and remains an active dynamic state.
+
+Because screenshots/DevTools are unavailable in this environment, historical Hero cascade layers are preserved even where some earlier declarations appear shadowed.
+
+#### DEAD IN CURRENT PRODUCTION
+
+The static production HTML and active JavaScript do not currently create the following classes:
+
+- `.hero-card`
+- `.orb`
+- `.trust`
+- `.feature-icon`
+- `.steps`
+- `.interactive-hover-button`
+- `.interactive-hover-button__label`
+- `.interactive-hover-button__hover`
+
+However, these classes are still referenced by the disconnected React source (`src/main.tsx`) or the inactive reusable component (`components/ui/interactive-hover-button.tsx`).
+
+Therefore they are dead in the current production DOM but are intentionally retained during Phase 4 so CSS maintenance does not silently break the dormant React implementation.
+
+#### KEEP
+
+Repeated rules that differ by breakpoint/state or still contribute unique properties remain intentionally separate.
+
+Examples:
+
+- `footer` grid changes at 850px and 500px;
+- `.service-grid` 4 → 2 → 1 column progression;
+- `.features,.step-grid` responsive grid rules;
+- reduced-motion overrides;
+- `.scrolled` desktop/mobile states;
+- `.waterproof-accent` desktop/mobile/reduced-motion states;
+- `.final-orbit` responsive/reduced-motion states;
+- mobile navigation rules added in Phase 1;
+- the two reveal families established in Phase 2.
+
+### 26.2 CSS ownership rule
+
+The static production page (`index.html` + `src/styles.css`) remains the CSS source of truth. Phase 4 cleanup may remove only declarations proven redundant by exact cascade analysis or selectors proven unused by both production markup and active JavaScript.
+
+Hero and responsive cascade history is preserved when visual equivalence cannot be proven structurally.
+
+---
+
