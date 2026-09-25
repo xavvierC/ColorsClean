@@ -1,5 +1,18 @@
 {
-  "scripts": { "dev": "vite", "build": "vite build", "preview": "vite preview" },
-  "dependencies": { "@vitejs/plugin-react": "latest", "vite": "latest", "typescript": "latest", "react": "latest", "react-dom": "latest", "lucide-react": "latest" },
+  "scripts": {
+    "dev": "vite",
+    "prebuild": "node -e \"console.log('phase3-node',process.version)\" && npm --version && npm ls --depth=0",
+    "build": "vite build",
+    "postbuild": "cp package-lock.json dist/_phase3-package-lock.json",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "vite": "latest",
+    "typescript": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "lucide-react": "latest"
+  },
   "devDependencies": {}
 }
