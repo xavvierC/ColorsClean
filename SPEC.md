@@ -1360,3 +1360,150 @@ No Lighthouse score is available because a real browser/Lighthouse profiler is n
 
 ---
 
+
+### 27.2 Final Phase 5 production policy
+
+Phase 5 production optimization was implemented in commit `4e1a294d349b11001a6eee189970b95812a59d8c`, followed by source/deployment cleanup in `7b17377024c8e6b72601fa71fbfe33230d81d6cb`.
+
+#### Production image format policy
+
+Production raster imagery should use WebP when it materially reduces transfer size while preserving the approved visual result.
+
+Canonical original artwork must not be destroyed to obtain a smaller production asset.
+
+Current canonical source archive:
+
+- `source-assets/hero-colorsclean.png` — 1672 × 941, 1,542,330 B;
+- `source-assets/logo.png` — 2172 × 724, 1,094,248 B.
+
+These source PNG files are retained in the repository but intentionally live outside `public/`, so Vite does not copy them into the deployed static output.
+
+Current production assets:
+
+- `public/hero-colorsclean.webp` — 1672 × 941, 114,852 B;
+- `public/logo-optimized.webp` — 768 × 256, 133,326 B;
+- `public/favicon.svg` — 282 B.
+
+#### Hero asset policy
+
+The Hero production WebP:
+
+- preserves the original 1672 × 941 dimensions;
+- uses the same source image and the existing CSS crop/positioning;
+- was encoded at WebP quality 92;
+- measured approximately 41.88 dB PSNR against the source during the Vercel build benchmark;
+- is preloaded from `index.html` with `as="image"`, `type="image/webp"` and `fetchpriority="high"`;
+- remains a CSS background so the established Hero composition, overlays and animation cascade are not restructured.
+
+No smaller mobile/tablet Hero variant is currently used. The existing mobile composition relies on `background-size: cover` in a tall viewport, which still requires substantial horizontal source resolution. Without screenshot-based regression testing, reducing Hero dimensions per breakpoint was judged a greater sharpness/crop risk than the modest additional transfer saving after WebP compression.
+
+#### Logo asset policy
+
+The official logo source remains archived unchanged.
+
+Production uses a 768 × 256 transparent lossless WebP derivative. This retains the source 3:1 aspect ratio and provides substantial pixel density above the approximately 190 × 48 CSS image box.
+
+Both production logo elements include explicit `width="190"` and `height="48"` attributes to establish a stable layout box.
+
+Header logo:
+
+- not lazy-loaded;
+- available during the initial viewport.
+
+Footer logo:
+
+- `loading="lazy"`;
+- `decoding="async"`;
+- references the same optimized logo asset, so normal browser caching avoids a second full transfer after the header use.
+
+#### Responsive image strategy
+
+Current strategy is deliberately small and maintainable:
+
+- Hero: one full-resolution compressed WebP because the visual crop is highly sensitive and the post-compression transfer is already small;
+- Logo: one appropriately downscaled lossless WebP because the same logo is rendered at a consistent small size;
+- Favicon: existing SVG;
+- no unnecessary variant matrix;
+- no generated/AI replacement imagery.
+
+If real photographic below-the-fold content is added later, use responsive `srcset`/`sizes` and lazy loading where the image dimensions and layout make that useful.
+
+#### Lazy-loading policy
+
+Do not lazy-load:
+
+- Hero/LCP imagery;
+- critical above-the-fold brand imagery when delaying it would create visible pop-in.
+
+Use `loading="lazy"` and `decoding="async"` for genuine below-the-fold `<img>` elements when they are not already required by above-the-fold content.
+
+CSS backgrounds cannot use native `loading="lazy"`; do not convert established layouts solely for that attribute.
+
+#### Preload policy
+
+Only preload resources known to be critical to the initial viewport.
+
+Current explicit image preload:
+
+- production Hero WebP.
+
+Do not preload the footer logo, decorative imagery or future below-the-fold content.
+
+#### Font policy after Phase 5
+
+The Google Fonts family selection and weights remain unchanged.
+
+`display=swap` was already present.
+
+Some declared/requested font weights may be associated with inactive React styling, but browser-level request tracing is unavailable and changing typography carries visual risk. No font family or weight was removed during stabilization without proof of a real production transfer benefit.
+
+#### JavaScript/CSS delivery after Phase 5
+
+- active production JavaScript remains inline at the end of `body`;
+- there is no external React bundle request;
+- the disconnected React source remains in the repository but is not mounted;
+- the single Vite stylesheet remains render-blocking because it defines the initial layout;
+- manual minification was not introduced; Vite continues to own production optimization.
+
+#### Phase 5 measured result
+
+Initial production image transfer set:
+
+- Hero PNG: 1,542,330 B;
+- Logo PNG: 1,094,248 B;
+- favicon SVG: 282 B;
+- total: 2,636,860 B.
+
+Final production image transfer set:
+
+- Hero WebP: 114,852 B;
+- Logo WebP: 133,326 B;
+- favicon SVG: 282 B;
+- total: 248,460 B.
+
+Measured reduction:
+
+- 2,388,400 B;
+- approximately 90.58%.
+
+The number of distinct initial image resources remains three: favicon, Hero and logo. The optimization reduces their payload rather than introducing extra requests.
+
+#### Performance validation limitations
+
+Validated structurally and through the production build/deployment:
+
+- `npm ci`;
+- `npm run build`;
+- no Vite build warning/error introduced;
+- optimized WebP files exist in final deployed output;
+- removed source PNG paths return 404 in production;
+- Hero preload resolves to the same hashed WebP emitted by Vite;
+- internal anchors remain valid;
+- mobile menu remains present;
+- Phase 2 single-observer architecture remains intact;
+- production returns HTTP 200.
+
+No Lighthouse score, browser network waterfall, DevTools trace or pixel-by-pixel screenshot comparison is claimed because those browser tools are not available in this environment.
+
+---
+
