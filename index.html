@@ -2,26 +2,51 @@
 <script>
 (()=>{
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const items=document.querySelectorAll('section,.strip,.service,.feature,.step,.result-visual,footer>div');
 
-  items.forEach((element,index)=>{
-    element.classList.add('reveal');
-    element.style.transitionDelay=((index%4)*80)+'ms';
-  });
+  const setupOneShotReveal=(elements,{rootMargin,threshold,getDelay})=>{
+    const targets=[...elements];
+    if(!targets.length||reduced||!('IntersectionObserver' in window))return;
 
-  if(reduced){
-    items.forEach(element=>element.classList.add('is-visible'));
-  }else{
-    const observer=new IntersectionObserver(entries=>{
-      entries.forEach(entry=>{
-        if(entry.isIntersecting){
+    let observer;
+    try{
+      observer=new IntersectionObserver(entries=>{
+        entries.forEach(entry=>{
+          if(!entry.isIntersecting)return;
           entry.target.classList.add('is-visible');
           observer.unobserve(entry.target);
-        }
+        });
+      },{rootMargin,threshold});
+
+      targets.forEach((element,index)=>{
+        const delay=getDelay?getDelay(element,index):0;
+        if(delay)element.style.transitionDelay=delay+'ms';
+        element.classList.add('reveal');
+        observer.observe(element);
       });
-    },{rootMargin:'0px 0px -10% 0px',threshold:.08});
-    items.forEach(element=>observer.observe(element));
-  }
+    }catch(error){
+      if(observer)observer.disconnect();
+      targets.forEach(element=>{
+        element.classList.remove('reveal','is-visible');
+        element.style.removeProperty('transition-delay');
+      });
+    }
+  };
+
+  const sectionOrder=[...document.querySelectorAll('main>section,.strip,footer')];
+  const sectionTargets=sectionOrder.filter(element=>!element.classList.contains('hero'));
+  setupOneShotReveal(sectionTargets,{
+    rootMargin:'-10% 0px -10% 0px',
+    threshold:.06,
+    getDelay:element=>Math.min(sectionOrder.indexOf(element),5)*70
+  });
+
+  const legacyDetailOrder=[...document.querySelectorAll('section,.strip,.service,.feature,.step,.result-visual,footer>div')];
+  const detailTargets=legacyDetailOrder.filter(element=>!element.matches('main>section,.strip,footer'));
+  setupOneShotReveal(detailTargets,{
+    rootMargin:'0px 0px -10% 0px',
+    threshold:.08,
+    getDelay:element=>(legacyDetailOrder.indexOf(element)%4)*80
+  });
 
   const hero=document.querySelector('.hero');
   if(hero&&!reduced&&matchMedia('(hover:hover)').matches){
@@ -56,11 +81,9 @@
 })();
 </script>
 
-<script>(()=>{const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;document.querySelectorAll(".trust span").forEach(e=>{e.classList.remove("reveal");e.classList.add("is-visible")});})();</script>
 
-<script>
-(()=>{const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;const targets=document.querySelectorAll('main>section,.strip,footer');targets.forEach((el,i)=>{el.classList.add('reveal');el.style.transitionDelay=(Math.min(i,5)*70)+'ms'});if(reduced){targets.forEach(el=>el.classList.add('is-visible'));return}const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{entry.target.classList.toggle('is-visible',entry.isIntersecting)}),{rootMargin:'-10% 0px -10% 0px',threshold:.06});targets.forEach(el=>observer.observe(el));})();
-</script>
+
+
 
 
 <script>
