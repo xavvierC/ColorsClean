@@ -1269,3 +1269,94 @@ Structural validation covers:
 
 It does not constitute pixel-perfect visual equivalence at 1440px, 768px or 390px because no browser screenshot/DevTools runner is available.
 
+
+## 27. Phase 5 performance stabilization
+
+### 27.1 Phase 5A production performance audit — 2026-09-24
+
+Audit baseline started from production commit `e6a041e40b4907f2182155708d63188b7ee524e7`.
+
+A temporary build-only diagnostic was added in commits `2f637c5d5555fabfe418eedb259a9dc70de97eea` and `39df11cb70685c77c72b5037642b6ca8c9b2c8a6` to read the actual source image metadata and benchmark image formats on the same Vercel build environment. It does not alter the rendered site.
+
+#### Production image inventory
+
+| Asset | Source dimensions | Source size | Production use | Fold | Current loading behavior |
+| --- | ---: | ---: | --- | --- | --- |
+| `public/hero-colorsclean.png` | 1672 × 941 | 1,542,330 B | CSS Hero background | Above fold / LCP candidate | Discovered after CSS; no preload; no responsive variant |
+| `public/logo.png` | 2172 × 724 | 1,094,248 B | Header logo + footer logo | Header above fold; footer below fold | Same file referenced twice; no width/height HTML attributes; no lazy attribute |
+| `public/favicon.svg` | viewBox 64 × 64 | 282 B | Browser favicon | Head | Standard favicon load |
+
+The service visuals and result comparator are currently CSS/emoji-based and do not introduce additional bitmap image requests.
+
+The two logo elements resolve to the same built URL, so a normal browser cache prevents a second full network download for the footer instance. The footer element itself is still below the fold and lacks explicit loading/decoding hints.
+
+#### Oversized source findings
+
+- The logo source is 2172 × 724 while the production CSS constrains its box to approximately 190 × 48. The source is materially oversized for its rendered use.
+- The Hero source is 1672 × 941. Its dimensions are reasonable for the desktop composition, but PNG encoding makes the transfer size unnecessarily large.
+- The mobile Hero uses `background-size: cover` in a tall viewport. Because cover geometry still needs a wide source to preserve the current crop, aggressively reducing source dimensions by viewport width alone can reduce sharpness. Format compression is therefore the first safe optimization.
+
+#### PNG metadata findings
+
+The build audit measured:
+
+- Hero ancillary metadata: 21,856 B;
+- Logo ancillary metadata: 23,629 B.
+
+Metadata stripping alone would not solve the performance problem; most payload is pixel data.
+
+#### Image conversion benchmark
+
+Vercel's current build image includes ImageMagick 6.9 with WebP, AVIF/HEIC and compare support. No new npm dependency is required for benchmarking.
+
+Full-resolution Hero WebP candidates:
+
+- quality 92: 114,852 B; PSNR ≈ 41.88 dB;
+- quality 90: 96,438 B; PSNR ≈ 41.53 dB;
+- quality 88: 80,018 B; PSNR ≈ 41.10 dB.
+
+A 1440 px-wide quality-90 Hero candidate measured 74,310 B.
+
+A 768 × 256 lossless WebP logo candidate measured 133,326 B.
+
+For final production, favor the higher-quality Hero candidate unless a smaller version can be proven visually equivalent.
+
+#### Font loading
+
+Current Google Fonts request:
+
+- DM Sans: 400, 500, 600, 700;
+- Manrope: 600, 700, 800;
+- `display=swap` is already enabled.
+
+The production stylesheet explicitly uses weights 600, 700 and 800 in different rule families, while default body text uses the regular face. Some requested weights may exist primarily for dormant/inactive React styling. Because Google Fonts only downloads font files that are actually selected by rendered text and browser-level request inspection is unavailable, Phase 5 will not remove font weights unless the production benefit can be proven without typography risk.
+
+#### CSS and JavaScript delivery
+
+- Production uses one Vite-generated stylesheet.
+- CSS is render-blocking by design because it is required for the initial layout.
+- Production contains no external JavaScript bundle; the active JavaScript is inline at the end of `body`.
+- The disconnected React application is not mounted and no React bundle is requested by the current production HTML.
+- No image preload currently exists.
+- External inline scripts do not require `defer` because there are no external script tags and the scripts already execute after the document markup.
+
+#### Public directory duplication
+
+Vite currently copies the original files from `public/` to root output paths, while references processed from HTML/CSS can also produce hashed asset copies. The source PNGs are therefore accessible in the deployed output even when not needed by the initial page request.
+
+A final optimization may keep canonical originals in the repository while moving them outside the deployable `public/` directory, provided all active and dormant references are updated safely.
+
+#### Phase 5A conclusion
+
+The dominant safe performance opportunity is image delivery:
+
+1. replace the loaded Hero PNG with a high-quality WebP equivalent while preserving identical dimensions/crop;
+2. serve a properly sized transparent WebP logo;
+3. preload only the actual Hero asset;
+4. add stable image dimensions and below-the-fold lazy loading where useful;
+5. avoid shipping original heavy source PNGs in deployable `public/` when they are retained only as canonical source assets.
+
+No Lighthouse score is available because a real browser/Lighthouse profiler is not exposed in this environment.
+
+---
+
