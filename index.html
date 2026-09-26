@@ -205,4 +205,27 @@
   }
 })();
 </script>
+<script>
+(()=>{
+  const replacePostServicesContent=()=>{
+    const differentiators=document.querySelector('#diferenciais');
+    const journey=document.querySelector('#como-funciona');
+    const results=document.querySelector('#resultados');
+    const faq=document.querySelector('.faq');
+    if(differentiators){
+      differentiators.innerHTML=`<div class="feature-intro"><p class="eyebrow">POR QUE ESCOLHER A COLORSCLEAN? <i></i></p><h2>Cuidado que entende o seu <em>ambiente.</em></h2></div><div class="features"><div class="feature"><h3>01 Atendimento personalizado</h3><p>Entendemos o item e a necessidade antes de indicar o cuidado adequado.</p></div><div class="feature"><h3>02 Agilidade no atendimento</h3><p>Você fala com a equipe pelo WhatsApp e recebe orientação de forma prática.</p></div><div class="feature"><h3>03 Residencial ou comercial</h3><p>Atendemos casas, apartamentos, escritórios e outros espaços em São Paulo e região.</p></div><div class="feature"><h3>04 Cuidado em cada serviço</h3><p>Do primeiro contato ao atendimento, cada etapa é conduzida com atenção.</p></div></div>`;
+    }
+    if(journey){
+      journey.innerHTML=`<p class="eyebrow">COMO FUNCIONA <i></i></p><h2>Do primeiro contato ao serviço agendado.</h2><div class="step-grid"><div class="step"><b>01</b><h3>Envie as informações</h3><p>Conte pelo WhatsApp qual item você quer cuidar e, se puder, envie uma foto.</p></div><div class="step"><b>02</b><h3>Receba a orientação</h3><p>Nossa equipe entende o material, o ambiente e indica o próximo passo.</p></div><div class="step"><b>03</b><h3>Agende o serviço</h3><p>Com tudo alinhado, combinamos o melhor dia para realizar o atendimento.</p></div></div>`;
+    }
+    if(results){
+      results.innerHTML=`<div><p class="eyebrow">CUIDADO QUE SE PERCEBE <i></i></p><h2>Mais conforto para a sua <em>rotina.</em></h2><p>Um ambiente bem cuidado começa com escolhas simples: limpeza profissional, orientação clara e atenção ao material de cada peça.</p><a class="primary" href="https://wa.me/5511914368178">Solicitar orçamento</a></div><div class="result-visual" role="img" aria-label="Sala de estar com sofá azul em um ambiente bem cuidado"><span class="result-visual-caption">Cuidado profissional para cada material</span></div>`;
+    }
+    if(faq){
+      faq.innerHTML=`<p class="eyebrow">DÚVIDAS FREQUENTES <i></i></p><h2>Antes de cuidar do seu estofado, <em>tire suas dúvidas.</em></h2><details><summary>Quanto tempo dura o serviço?</summary><p>O tempo varia conforme o tamanho e o estado do item. Nossa equipe informa uma estimativa ao entender sua necessidade.</p></details><details><summary>Quanto tempo leva para secar?</summary><p>Depende do tecido, ventilação e condições do ambiente. Orientamos você sobre os cuidados após o atendimento.</p></details><details><summary>Como funciona a impermeabilização?</summary><p>Aplicamos uma proteção que ajuda a reduzir a absorção imediata de líquidos e sujeiras, sem substituir os cuidados normais de uso.</p></details><details><summary>Quais itens e tecidos podem ser atendidos?</summary><p>Avaliamos diferentes tecidos, estofados, colchões e tapetes para indicar o cuidado adequado a cada material.</p></details><details><summary>Como solicito um orçamento em domicílio?</summary><p>Envie uma breve descrição ou foto pelo WhatsApp. Atendemos residências e empresas em São Paulo e região.</p></details>`;
+    }
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',replacePostServicesContent,{once:true});else replacePostServicesContent();
+})();
+</script>
 </body></html>
