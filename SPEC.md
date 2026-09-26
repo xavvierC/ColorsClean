@@ -1507,3 +1507,86 @@ No Lighthouse score, browser network waterfall, DevTools trace or pixel-by-pixel
 
 ---
 
+## 28. Services section — approved editorial rebuild
+
+Implemented in commit `7fa93784034ba5a589b1345134713ee99044b264`.
+
+The production `#serviços` section now follows a light editorial composition inspired by premium residential-service websites while preserving the ColorsClean palette and static/Vite architecture.
+
+### 28.1 Structure
+
+Approved production hierarchy:
+
+1. Eyebrow: `Nossos serviços`;
+2. Main heading: `Cuidado completo para o seu ambiente.`;
+3. `seu ambiente.` highlighted with ColorsClean blue;
+4. Supporting paragraph on the right;
+5. Small optional micro-detail: `Cuidado em cada detalhe`;
+6. Four photographic service cards:
+   - Limpeza de Estofados;
+   - Limpeza de Colchões;
+   - Limpeza de Tapetes;
+   - Impermeabilização.
+
+The existing `#serviços` anchor must remain stable.
+
+### 28.2 Visual ownership
+
+The section uses unique production classes beginning with:
+
+- `.services-showcase`
+- `.services-intro`
+- `.services-cards`
+- `.service-card`
+
+This avoids coupling the new production section to the historical `.service` rules still used by the disconnected React source.
+
+Approved visual characteristics:
+
+- clean light background;
+- dark editorial typography;
+- ColorsClean blue only for the main phrase highlight and selected interaction accents;
+- restrained orange detail line;
+- four real-photography cards on desktop;
+- dark bottom image overlay for text contrast;
+- line-style inline SVG icons;
+- small `Saiba mais` CTA with circular arrow detail;
+- no fake 3D, glow, oversized icons or decorative clutter.
+
+### 28.3 Responsive behavior
+
+Current section breakpoints:
+
+- Desktop: four cards in one row.
+- Up to 1080px: two-column card grid and simplified intro; micro-detail hidden.
+- Up to 700px: single-column card stack, 20px section side padding and mobile-specific type scale.
+
+Do not force four columns into tablet widths.
+
+### 28.4 Service image delivery
+
+The four service photographs are below-the-fold content and therefore use:
+
+- real photographic imagery;
+- explicit `width` / `height` attributes to reserve aspect ratio;
+- `loading="lazy"`;
+- `decoding="async"`;
+- responsive `srcset` variants;
+- `sizes` matched to 1-column / 2-column / 4-column layouts.
+
+Current service photography is served from fixed Unsplash image asset IDs through the Unsplash image CDN. These are editorial/service visuals, not official ColorsClean brand assets.
+
+Brand assets (Hero, logo and favicon) remain local and governed by the Phase 5 performance policy.
+
+Do not replace the service photography with AI-generated imagery without explicit approval.
+
+### 28.5 Motion ownership
+
+The Phase 2 detail reveal helper now includes `.service-card`.
+
+The service cards therefore preserve the existing one-shot reveal behavior while retaining their own restrained hover/image-scale interaction.
+
+Reduced-motion users receive no service-card hover transform animation.
+
+---
+
